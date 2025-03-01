@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Model.Runtime.Projectiles;
 using UnityEngine;
 
@@ -24,7 +25,7 @@ namespace UnitBrains.Player
             {
                 return;
             }
-            
+
             for (int i = 0; i <= currentTemperature; i++)
             {
                 var projectile = CreateProjectile(forTarget);
@@ -45,10 +46,29 @@ namespace UnitBrains.Player
             // Homework 1.4 (1st block, 4rd module)
             ///////////////////////////////////////
             List<Vector2Int> result = GetReachableTargets();
+
+            float minDistance = float.MaxValue;
+            Vector2Int closestTarget = default;
+            foreach (Vector2Int target in result)
+            {
+                if (DistanceToOwnBase(target) < minDistance)
+                {
+                    minDistance = DistanceToOwnBase(target);
+                    closestTarget = target;
+                }
+            }
+            if (closestTarget != default)
+            {
+                result.Clear();
+                result.Add(closestTarget);
+            }
+
+
             while (result.Count > 1)
             {
                 result.RemoveAt(result.Count - 1);
             }
+
             return result;
             ///////////////////////////////////////
         }
