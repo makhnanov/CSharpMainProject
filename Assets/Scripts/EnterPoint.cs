@@ -4,12 +4,14 @@ using Controller;
 using Model;
 using Model.Config;
 using UnityEngine;
+using UnityEngine.UI;
 using Utilities;
 
 public class EnterPoint : MonoBehaviour
 {
     [SerializeField] private Settings _settings;
     [SerializeField] private Canvas _targetCanvas;
+    [SerializeField] private Slider _audioSlider;
     private float _timeScale = 1;
     
     void Start()

@@ -25,6 +25,9 @@ namespace Utilities
         {
             ServiceLocator.Register(this);
             _camera = GetComponent<Camera>();
+            //_camera.GetComponent<AudioListener>().enabled = false;
+            //AudioListener.volume = 0.01f;
+
         }
 
         private void Update()
