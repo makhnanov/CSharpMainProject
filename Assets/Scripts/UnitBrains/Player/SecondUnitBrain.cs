@@ -48,7 +48,7 @@ namespace UnitBrains.Player
             List<Vector2Int> result = GetReachableTargets();
 
             float minDistance = float.MaxValue;
-            Vector2Int closestTarget = default;
+            Vector2Int closestTarget = new();
             foreach (Vector2Int target in result)
             {
                 if (DistanceToOwnBase(target) < minDistance)
@@ -57,16 +57,10 @@ namespace UnitBrains.Player
                     closestTarget = target;
                 }
             }
-            if (closestTarget != default)
+            if (MathF.Abs(minDistance - float.MaxValue) > 1e-6)
             {
                 result.Clear();
                 result.Add(closestTarget);
-            }
-
-
-            while (result.Count > 1)
-            {
-                result.RemoveAt(result.Count - 1);
             }
 
             return result;
