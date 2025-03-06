@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using Model;
 using Model.Runtime.Projectiles;
 using UnityEngine;
+using static Utilities.Extensions;
 
 namespace UnitBrains.Player
 {
@@ -12,6 +15,8 @@ namespace UnitBrains.Player
         private float _temperature = 0f;
         private float _cooldownTime = 0f;
         private bool _overheated;
+
+        private List<Vector2Int> _targetsOutOfRange = new();
         
         protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
         {
@@ -38,7 +43,13 @@ namespace UnitBrains.Player
 
         public override Vector2Int GetNextStep()
         {
-            return base.GetNextStep();
+            IEnumerable<Vector2Int> allTargets = GetAllTargets();
+            if (HasTargetsInRange() || !allTargets.Any() || !_targetsOutOfRange.Any())
+            {
+                return unit.Pos;
+            }
+            
+            return unit.Pos.CalcNextStepTowards(_targetsOutOfRange.First());
         }
 
         protected override List<Vector2Int> SelectTargets()
@@ -46,31 +57,39 @@ namespace UnitBrains.Player
             ///////////////////////////////////////
             // Homework 1.4 (1st block, 4rd module)
             ///////////////////////////////////////
-            List<Vector2Int> targets = GetReachableTargets();
-            Vector2Int? lowestTarget = null;
-            float lowest = float.MinValue;
+            var EnemyBase =
+                runtimeModel.RoMap.Bases[IsPlayerUnitBrain ? RuntimeModel.BotPlayerId : RuntimeModel.PlayerId];
             
-            foreach (Vector2Int target in targets)
+            IEnumerable<Vector2Int> targets = GetAllTargets();
+            targets = targets.OrderBy(DistanceToOwnBase);
+            
+            List<Vector2Int> resultList = new();
+            
+            Vector2Int theMostDangerous = targets.FirstOrDefault();
+            if (theMostDangerous != null)
             {
-                float distanceToOwnBase = DistanceToOwnBase(target);
-                if (distanceToOwnBase > lowest)
+                if (IsTargetInRange(theMostDangerous))
                 {
-                    lowest = distanceToOwnBase;
-                    lowestTarget = target;
+                    resultList.Add(theMostDangerous);
+                    return resultList;
+                }
+                _targetsOutOfRange.Add(theMostDangerous);
+            }
+            
+            var targetsList = targets.ToList();
+            foreach (Vector2Int target in targetsList)
+            {
+                if (IsTargetInRange(target))
+                {
+                    resultList.Add(target);
+                }
+                else
+                {
+                    _targetsOutOfRange.Add(theMostDangerous);
                 }
             }
 
-            if (lowestTarget == null)
-            {
-                return targets.Count > 0
-                    ? new List<Vector2Int> { targets[0] }
-                    : new List<Vector2Int>();
-            }
-
-            targets.Clear();
-            targets.Add((Vector2Int)lowestTarget);
-            return targets;
-            ///////////////////////////////////////
+            return resultList;
         }
 
         public override void Update(float deltaTime, float time)
