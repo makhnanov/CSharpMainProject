@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using Model;
 using Model.Runtime.Projectiles;
 using UnityEngine;
+using Utilities;
 
 namespace UnitBrains.Player
 {
@@ -13,6 +15,7 @@ namespace UnitBrains.Player
         private float _temperature = 0f;
         private float _cooldownTime = 0f;
         private bool _overheated;
+        private List<Vector2Int> _targetsOutOfRange = new();
 
         protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
         {
@@ -37,7 +40,17 @@ namespace UnitBrains.Player
 
         public override Vector2Int GetNextStep()
         {
-            return base.GetNextStep();
+            Vector2Int result = new();
+            if (_targetsOutOfRange.Count == 0 || IsTargetInRange(_targetsOutOfRange[0]))
+            {
+                result = unit.Pos;
+            }
+            else
+            {
+                result = unit.Pos.CalcNextStepTowards(_targetsOutOfRange[0]);
+            }
+            _targetsOutOfRange.Clear();
+            return result;
         }
 
         protected override List<Vector2Int> SelectTargets()
@@ -45,11 +58,11 @@ namespace UnitBrains.Player
             ///////////////////////////////////////
             // Homework 1.4 (1st block, 4rd module)
             ///////////////////////////////////////
-            List<Vector2Int> result = GetReachableTargets();
-
+            List<Vector2Int> result = new();
+            IEnumerable<Vector2Int> allTargets = GetAllTargets();
             float minDistance = float.MaxValue;
             Vector2Int closestTarget = new();
-            foreach (Vector2Int target in result)
+            foreach (Vector2Int target in allTargets)
             {
                 if (DistanceToOwnBase(target) < minDistance)
                 {
@@ -59,8 +72,27 @@ namespace UnitBrains.Player
             }
             if (MathF.Abs(minDistance - float.MaxValue) > 1e-6)
             {
-                result.Clear();
-                result.Add(closestTarget);
+                if (IsTargetInRange(closestTarget))
+                {
+                    result.Add(closestTarget);
+                }
+                else
+                {
+                    _targetsOutOfRange.Clear();
+                    _targetsOutOfRange.Add(closestTarget);
+                }
+            }
+            else
+            {
+                if (IsTargetInRange(runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId]))
+                {
+                    result.Add(runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId]);
+                }
+                else
+                {
+                    _targetsOutOfRange.Clear();
+                    _targetsOutOfRange.Add(runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId]);
+                }
             }
 
             return result;
