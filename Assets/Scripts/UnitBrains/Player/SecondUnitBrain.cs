@@ -85,9 +85,10 @@ namespace UnitBrains.Player
                     }
                 }
 
-                if (inRange.Count > ID && ID >= 1)
+                int remainder = ID % MaxSelectors;
+                if (inRange.Count > remainder && remainder >= 1)
                 {
-                    inRange.RemoveRange(0, ID);
+                    inRange.RemoveRange(0, remainder);
                 }
 
                 resultList = inRange;
