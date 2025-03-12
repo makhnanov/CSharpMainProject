@@ -12,12 +12,23 @@ namespace UnitBrains.Player
         public override string TargetUnitName => "Cobra Commando";
         private const float OverheatTemperature = 3f;
         private const float OverheatCooldown = 2f;
-        private float _temperature = 0f;
-        private float _cooldownTime = 0f;
+        private float _temperature; //  = 0f
+        private float _cooldownTime; //  = 0f
         private bool _overheated;
 
         private List<Vector2Int> _targetsOutOfRange = new();
+
+        private const int MaxSelectors = 3;
         
+        private static int _selectorCount;
+
+        private int ID { get; }
+
+        public SecondUnitBrain()
+        {
+            ID = _selectorCount++;
+        }
+
         protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
         {
             ///////////////////////////////////////
@@ -54,41 +65,48 @@ namespace UnitBrains.Player
 
         protected override List<Vector2Int> SelectTargets()
         {
-            ///////////////////////////////////////
-            // Homework 1.4 (1st block, 4rd module)
-            ///////////////////////////////////////
-            var EnemyBase =
-                runtimeModel.RoMap.Bases[IsPlayerUnitBrain ? RuntimeModel.BotPlayerId : RuntimeModel.PlayerId];
-            
-            IEnumerable<Vector2Int> targets = GetAllTargets();
-            targets = targets.OrderBy(DistanceToOwnBase);
-            
             List<Vector2Int> resultList = new();
+            List<Vector2Int> targets = GetAllTargets().ToList();
+            List<Vector2Int> inRange = new();
             
-            Vector2Int theMostDangerous = targets.FirstOrDefault();
-            if (theMostDangerous != null)
-            {
-                if (IsTargetInRange(theMostDangerous))
-                {
-                    resultList.Add(theMostDangerous);
-                    return resultList;
-                }
-                _targetsOutOfRange.Add(theMostDangerous);
-            }
-            
-            var targetsList = targets.ToList();
-            foreach (Vector2Int target in targetsList)
-            {
-                if (IsTargetInRange(target))
-                {
-                    resultList.Add(target);
-                }
-                else
-                {
-                    _targetsOutOfRange.Add(theMostDangerous);
-                }
-            }
+            SortByDistanceToOwnBase(targets);
 
+            if (ID < MaxSelectors)
+            {
+                foreach (Vector2Int target in targets)
+                {
+                    if (IsTargetInRange(target))
+                    {
+                        inRange.Add(target);
+                    }
+                    else
+                    {
+                        _targetsOutOfRange.Add(target);
+                    }
+                }
+
+                if (inRange.Count > ID && ID >= 1)
+                {
+                    inRange.RemoveRange(0, ID);
+                }
+
+                resultList = inRange;
+            }
+            else
+            {
+                foreach (Vector2Int target in targets)
+                {
+                    if (IsTargetInRange(target))
+                    {
+                        resultList.Add(target);
+                    }
+                    else
+                    {
+                        _targetsOutOfRange.Add(target);
+                    }
+                }
+            }
+            
             return resultList;
         }
 
