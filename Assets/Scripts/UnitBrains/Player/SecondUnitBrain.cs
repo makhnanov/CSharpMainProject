@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Model;
 using Model.Runtime.Projectiles;
 using UnityEngine;
@@ -16,6 +17,10 @@ namespace UnitBrains.Player
         private float _cooldownTime = 0f;
         private bool _overheated;
         private List<Vector2Int> _targetsOutOfRange = new();
+
+        private static int _idCount = 0;
+        private int _id = _idCount++;
+        private const int SmartTargetNumber = 3;
 
         protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
         {
@@ -59,40 +64,68 @@ namespace UnitBrains.Player
             // Homework 1.4 (1st block, 4rd module)
             ///////////////////////////////////////
             List<Vector2Int> result = new();
-            IEnumerable<Vector2Int> allTargets = GetAllTargets();
-            float minDistance = float.MaxValue;
-            Vector2Int closestTarget = new();
-            foreach (Vector2Int target in allTargets)
+            //IEnumerable<Vector2Int> allTargets = GetAllTargets();
+            //float minDistance = float.MaxValue;
+            //Vector2Int closestTarget = new();
+            //foreach (Vector2Int target in allTargets)
+            //{
+            //    if (DistanceToOwnBase(target) < minDistance)
+            //    {
+            //        minDistance = DistanceToOwnBase(target);
+            //        closestTarget = target;
+            //    }
+            //}
+            //if (MathF.Abs(minDistance - float.MaxValue) > 1e-6)
+            //{
+            //    if (IsTargetInRange(closestTarget))
+            //    {
+            //        result.Add(closestTarget);
+            //    }
+            //    else
+            //    {
+            //        _targetsOutOfRange.Clear();
+            //        _targetsOutOfRange.Add(closestTarget);
+            //    }
+            //}
+            //else
+            //{
+            //    if (IsTargetInRange(runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId]))
+            //    {
+            //        if (IsPlayerUnitBrain)
+            //        {
+            //            result.Add(runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId]);
+            //        }
+            //        else
+            //        {
+            //            result.Add(runtimeModel.RoMap.Bases[RuntimeModel.PlayerId]);
+            //        }
+            //    }
+            //    else
+            //    {
+            //        _targetsOutOfRange.Clear();
+            //        if (IsPlayerUnitBrain)
+            //        {
+            //            _targetsOutOfRange.Add(runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId]);
+            //        }
+            //        else
+            //        {
+            //            _targetsOutOfRange.Add(runtimeModel.RoMap.Bases[RuntimeModel.PlayerId]);
+            //        }
+            //    }
+            //}
+
+            List<Vector2Int> sortedTargets = GetAllTargets().ToList();
+            SortByDistanceToOwnBase(sortedTargets);
+            Vector2Int target = sortedTargets.Count < SmartTargetNumber ? sortedTargets[_id % sortedTargets.Count] : sortedTargets[_id % SmartTargetNumber];
+            if (IsTargetInRange(target))
             {
-                if (DistanceToOwnBase(target) < minDistance)
-                {
-                    minDistance = DistanceToOwnBase(target);
-                    closestTarget = target;
-                }
-            }
-            if (MathF.Abs(minDistance - float.MaxValue) > 1e-6)
-            {
-                if (IsTargetInRange(closestTarget))
-                {
-                    result.Add(closestTarget);
-                }
-                else
-                {
-                    _targetsOutOfRange.Clear();
-                    _targetsOutOfRange.Add(closestTarget);
-                }
+                result.Clear();
+                result.Add(target);
             }
             else
             {
-                if (IsTargetInRange(runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId]))
-                {
-                    result.Add(runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId]);
-                }
-                else
-                {
-                    _targetsOutOfRange.Clear();
-                    _targetsOutOfRange.Add(runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId]);
-                }
+                _targetsOutOfRange.Clear();
+                _targetsOutOfRange.Add(target);
             }
 
             return result;
