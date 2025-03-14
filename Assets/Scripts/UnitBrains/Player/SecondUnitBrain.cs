@@ -18,7 +18,7 @@ namespace UnitBrains.Player
         private bool _overheated;
         private List<Vector2Int> _targetsOutOfRange = new();
 
-        private static int _idCount = 0;
+        private static int _idCount = -1;
         private int _id = _idCount++;
         private const int SmartTargetNumber = 3;
 
